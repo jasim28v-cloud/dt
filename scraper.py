@@ -2,16 +2,17 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
 import re
+import os
 import random
 import time
 
 def generate_nexusvision_site():
     rss_url = "https://akhbaralaan.net/feed/rss/"
 
-    # رؤوس HTTP محسنة لأحدث إصدار 2026
+    # رؤوس HTTP كاملة ومحدثة لأحدث معايير 2026
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36 Edg/126.0.0.0',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+        'Accept': 'application/xml, text/xml, */*; q=0.01',
         'Accept-Language': 'ar-IQ,ar;q=0.9,en-US;q=0.8,en;q=0.7',
         'Accept-Encoding': 'gzip, deflate, br, zstd',
         'Referer': 'https://www.google.com/',
@@ -28,21 +29,22 @@ def generate_nexusvision_site():
         'Sec-Ch-Ua-Platform': '"Windows"',
         'Sec-Ch-Ua-Platform-Version': '"15.0.0"',
         'Priority': 'u=1, i',
-        'View-Transition': 'same-origin'
+        'View-Transition': 'same-origin',
+        'TE': 'trailers'
     }
 
     try:
         # إضافة تأخير عشوائي لمحاكاة سلوك بشري
-        time.sleep(random.uniform(0.5, 2.0))
+        time.sleep(random.uniform(0.5, 1.5))
 
         # جلب المحتوى من RSS
         response = requests.get(rss_url, headers=headers, timeout=20)
         response.encoding = 'utf-8'
         soup = BeautifulSoup(response.content, 'xml')
-        items = soup.find_all('item')[:24]  # زيادة عدد الأخبار إلى 24
+        items = soup.find_all('item')[:12]  # أخذ أول 12 خبر
 
         # إنشاء شريط الأخبار المتحرك
-        ticker_items = " • ".join([item.title.text for item in items[:12]])
+        ticker_items = " • ".join([item.title.text for item in items[:8]])
 
         # بناء محتوى الأخبار
         news_html = ""
@@ -56,8 +58,8 @@ def generate_nexusvision_site():
             img_match = re.search(r'<img[^>]+src="([^">]+)"', description)
             img_url = img_match.group(1) if img_match else f"https://picsum.photos/800/500?random={i}"
 
-            # تنظيف الوصف وإزالة الوسوم
-            clean_desc = re.sub('<[^<]+?>', '', description)[:180] + "..."
+            # تنظيف الوصف
+            clean_desc = re.sub('<[^<]+?>', '', description)[:150] + "..."
 
             # تحديد فئة الخبر
             category = ["حصري", "عاجل", "مهم", "رياضة", "سياسة", "اقتصاد"][i % 6]
@@ -66,40 +68,36 @@ def generate_nexusvision_site():
             <article class="nexus-card">
                 <div class="category-badge {category.lower()}">{category}</div>
                 <div class="card-image">
-                    <img src="{img_url}" loading="lazy" alt="{title}" onerror="this.src='https://via.placeholder.com/800x500/1a1a1a/ffffff?text=NexusVision'">
+                    <img src="{img_url}" loading="lazy" alt="{title}" onerror="this.src=\'https://via.placeholder.com/800x500/1a1a1a/ffffff?text=NexusVision\'">
                 </div>
                 <div class="card-content">
                     <h2 class="card-title">{title}</h2>
                     <p class="card-snippet">{clean_desc}</p>
                     <div class="meta-data">
-                        <span class="date">🕒 {datetime.strptime(pub_date, "%a, %d %b %Y %H:%M:%S %z").strftime("%Y-%m-%d %H:%M")}</span>
-                        <span class="views">👁 {random.randint(100, 5000)}</span>
+                        <span>🕒 {datetime.strptime(pub_date, "%a, %d %b %Y %H:%M:%S %z").strftime("%Y-%m-%d %H:%M")}</span>
+                        <span>👁 {random.randint(100, 5000)}</span>
                     </div>
                     <div class="action-area">
                         <a href="{link}" target="_blank" class="btn-nexus">قراءة المزيد</a>
-                        <button class="btn-share" onclick="shareNews('{title}', '{link}')">مشاركة</button>
                     </div>
                 </div>
             </article>'''
 
-        # إنشاء الصفحة الكاملة مع اسم NexusVision
+        # إنشاء الصفحة الكاملة مع جميع العناصر الضرورية
         full_html = f'''<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="NexusVision - منصة أخبار moderne مع تصميم Glassmorphism">
-    <meta name="keywords" content="أخبار, Glassmorphism, تصميم moderne, NexusVision">
     <title>NexusVision | منصة الأخبار الحديثة</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {{
-            --glass-bg: rgba(255, 255, 255, 0.06);
+            --glass-bg: rgba(255, 255, 255, 0.08);
             --glass-border: rgba(255, 255, 255, 0.15);
             --primary: #00f2fe;
             --secondary: #ff0844;
-            --accent: #a29bfe;
             --text-main: #ffffff;
             --text-secondary: rgba(255, 255, 255, 0.7);
         }}
@@ -109,17 +107,15 @@ def generate_nexusvision_site():
             box-sizing: border-box;
         }}
         body {{
-            background: linear-gradient(135deg, #0a0e2a, #1a1f3a, #2d3748);
-            background-attachment: fixed;
+            background: linear-gradient(135deg, #0a0e2a, #1a1f3a);
             font-family: 'Cairo', sans-serif;
             color: var(--text-main);
-            padding-top: 130px;
+            padding-top: 120px;
             min-height: 100vh;
-            overflow-x: hidden;
         }}
         header {{
             background: rgba(10, 14, 42, 0.7);
-            backdrop-filter: blur(25px);
+            backdrop-filter: blur(20px);
             padding: 15px 5%;
             position: fixed;
             top: 0;
@@ -127,28 +123,14 @@ def generate_nexusvision_site():
             z-index: 1000;
             border-bottom: 1px solid var(--glass-border);
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
         }}
         .logo {{
-            font-family: 'Poppins', sans-serif;
             font-size: 24px;
             font-weight: 700;
             color: #fff;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }}
-        .logo-icon {{
-            color: var(--primary);
-            font-size: 28px;
-        }}
-        .logo-text {{
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
+            text-shadow: 0 0 10px var(--primary);
         }}
         .ticker-wrap {{
             position: fixed;
@@ -171,7 +153,6 @@ def generate_nexusvision_site():
             display: flex;
             align-items: center;
             font-size: 14px;
-            color: white;
         }}
         .ticker-scroll {{
             white-space: nowrap;
@@ -181,47 +162,43 @@ def generate_nexusvision_site():
         }}
         @keyframes scroll {{
             0% {{ transform: translateX(100%); }}
-            100% {{ transform: translateX(-250%); }}
+            100% {{ transform: translateX(-200%); }}
         }}
         .container {{
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto 50px;
             padding: 0 20px;
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 25px;
         }}
         .nexus-card {{
             background: var(--glass-bg);
-            backdrop-filter: blur(16px);
-            border-radius: 20px;
-            overflow: hidden;
+            backdrop-filter: blur(15px);
+            border-radius: 15px;
             border: 1px solid var(--glass-border);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-            position: relative;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
         }}
         .nexus-card:hover {{
-            transform: translateY(-12px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            transform: translateY(-10px);
         }}
         .category-badge {{
             position: absolute;
             top: 15px;
             right: 15px;
-            padding: 6px 12px;
+            padding: 5px 10px;
             font-size: 12px;
             font-weight: 600;
-            border-radius: 20px;
-            z-index: 5;
+            border-radius: 15px;
             color: white;
         }}
-        .category-badge.حصري {{ background: linear-gradient(90deg, #ff0844, #ff4d7e); }}
-        .category-badge.عاجل {{ background: linear-gradient(90deg, #ff6b35, #f7931e); }}
-        .category-badge.مهم {{ background: linear-gradient(90deg, #a29bfe, #d4c5fd); }}
-        .category-badge.رياضة {{ background: linear-gradient(90deg, #00f2fe, #4facfe); }}
-        .category-badge.سياسة {{ background: linear-gradient(90deg, #43e97b, #38f9d7); }}
-        .category-badge.اقتصاد {{ background: linear-gradient(90deg, #ffd86f, #fc6262); }}
+        .category-badge.حصري {{ background: var(--secondary); }}
+        .category-badge.عاجل {{ background: #ff6b35; }}
+        .category-badge.مهم {{ background: #a29bfe; }}
+        .category-badge.رياضة {{ background: var(--primary); }}
+        .category-badge.سياسة {{ background: #43e97b; }}
+        .category-badge.اقتصاد {{ background: #ffd86f; }}
         .card-image {{
             height: 200px;
             overflow: hidden;
@@ -230,20 +207,19 @@ def generate_nexusvision_site():
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transition: transform 0.5s;
         }}
         .nexus-card:hover .card-image img {{
-            transform: scale(1.07);
+            transform: scale(1.05);
         }}
         .card-content {{
-            padding: 20px;
+            padding: 15px;
         }}
         .card-title {{
             font-size: 18px;
             font-weight: 700;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             line-height: 1.4;
-            color: var(--text-main);
         }}
         .card-snippet {{
             font-size: 14px;
@@ -262,7 +238,6 @@ def generate_nexusvision_site():
         }}
         .action-area {{
             display: flex;
-            gap: 10px;
         }}
         .btn-nexus {{
             flex: 1;
@@ -274,27 +249,9 @@ def generate_nexusvision_site():
             border-radius: 25px;
             font-weight: 600;
             transition: all 0.3s;
-            border: none;
-            cursor: pointer;
         }}
         .btn-nexus:hover {{
             transform: scale(1.03);
-            box-shadow: 0 5px 15px rgba(0, 242, 254, 0.3);
-        }}
-        .btn-share {{
-            background: rgba(255, 255, 255, 0.1);
-            color: var(--text-main);
-            border: 1px solid var(--glass-border);
-            padding: 10px 15px;
-            border-radius: 25px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }}
-        .btn-share:hover {{
-            background: rgba(255, 255, 255, 0.15);
-            border-color: var(--primary);
-            color: var(--primary);
         }}
         footer {{
             text-align: center;
@@ -305,97 +262,45 @@ def generate_nexusvision_site():
             background: rgba(10, 14, 42, 0.3);
             backdrop-filter: blur(10px);
         }}
-        .social-links {{
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 15px;
-        }}
-        .social-links a {{
-            color: var(--text-secondary);
-            font-size: 20px;
-            transition: all 0.3s;
-        }}
-        .social-links a:hover {{
-            color: var(--primary);
-            transform: translateY(-3px);
-        }}
         @media (max-width: 768px) {{
-            .container {{
-                grid-template-columns: 1fr;
-            }}
-            body {{
-                padding-top: 160px;
-            }}
-            .ticker-wrap {{
-                top: 90px;
-            }}
+            .container {{ grid-template-columns: 1fr; }}
+            body {{ padding-top: 150px; }}
         }}
     </style>
 </head>
 <body>
     <header>
-        <a href="#" class="logo">
-            <i class="fas fa-network-wired logo-icon"></i>
-            <span class="logo-text">NexusVision</span>
-        </a>
-        <div class="search-icon">
-            <i class="fas fa-search"></i>
-        </div>
+        <div class="logo">NexusVision</div>
     </header>
     <div class="ticker-wrap">
-        <div class="ticker-title"><i class="fas fa-bolt"></i> آخر الأخبار</div>
+        <div class="ticker-title">أهم الأخبار</div>
         <div class="ticker-scroll">{ticker_items}</div>
     </div>
     <main class="container">
         {news_html}
     </main>
     <footer>
-        <p>&copy; {datetime.now().year} NexusVision | منصة الأخبار الحديثة</p>
-        <div class="social-links">
-            <a href="#"><i class="fab fa-facebook-f"></i></a>
-            <a href="#"><i class="fab fa-twitter"></i></a>
-            <a href="#"><i class="fab fa-instagram"></i></a>
-            <a href="#"><i class="fab fa-youtube"></i></a>
-        </div>
+        <p>© {datetime.now().year} NexusVision | منصة الأخبار الحديثة</p>
     </footer>
-    <script>
-        function shareNews(title, url) {{
-            if (navigator.share) {{
-                navigator.share({{
-                    title: title,
-                    url: url
-                }}).catch(err => {{
-                    console.log("Error sharing:", err);
-                }});
-            }} else {{
-                alert("ميزة المشاركة غير مدعومة في متصفحك الحالي");
-            }}
-        }}
-
-        // إضافة تأثيرات إضافية
-        document.addEventListener('DOMContentLoaded', function() {{
-            const cards = document.querySelectorAll('.nexus-card');
-            cards.forEach(card => {{
-                card.addEventListener('mousemove', (e) => {{
-                    const rect = card.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const y = e.clientY - rect.top;
-
-                    card.style.setProperty('--mouse-x', `${{x}}px`);
-                    card.style.setProperty('--mouse-y', `${{y}}px`);
-                }});
-            }});
-        }});
-    </script>
 </body>
 </html>'''
-        with open("nexusvision.html", "w", encoding="utf-8") as f:
-            f.write(full_html)
-        print("✅ تم إنشاء موقع NexusVision بنجاح! افتح ملف nexusvision.html")
 
+        # حفظ الملف في مسار واضح على سطح المكتب
+        desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
+        file_path = os.path.join(desktop_path, "nexusvision.html")
+
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write(full_html)
+
+        print(f"✅ تم إنشاء موقع NexusVision بنجاح!")
+        print(f"يمكنك العثور على الملف في: {file_path}")
+        print(f"افتح الملف باستخدام متصفحك المفضل للبدء في التصفح.")
+
+    except requests.exceptions.RequestException as e:
+        print(f"❌ خطأ في جلب البيانات: {e}")
+        print("قد يكون هناك حظر للطلب من قبل الموقع أو مشكلة في الاتصال بالإنترنت.")
     except Exception as e:
-        print(f"❌ خطأ: {e}")
+        print(f"❌ خطأ غير متوقع: {e}")
 
 if __name__ == "__main__":
     generate_nexusvision_site()
