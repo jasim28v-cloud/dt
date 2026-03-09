@@ -1,0 +1,39 @@
+name: Vortex Trends Auto Update
+
+on:
+  schedule:
+    # تحديث كل 30 دقيقة
+    - cron: '*/30 * * * *'
+  workflow_dispatch: # للسماح لك بتشغيله يدوياً للتجربة
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          pip install requests beautifulsoup4 lxml
+
+      - name: Run Scraper
+        # هذا السطر سيقوم بتشغيل كود التريندات الجديد
+        run: python scraper.py
+
+      - name: Commit and Push changes
+        run: |
+          git config --global user.name "Vortex-Bot"
+          git config --global user.email "bot@vortex.com"
+          git add index.html
+          # السطر التالي يمنع الفشل إذا لم يتغير المحتوى
+          git commit -m "Vortex Trends Update: $(date)" || exit 0
+          git push
